@@ -1,0 +1,52 @@
+[
+  {
+    "id": "c1",
+    "name": "BANDARU VENKATESH",
+    "phone": "8019566202",
+    "email": "bandaru.venk@gmail.com",
+    "city": "Chemakurti",
+    "state": "Andhra Pradesh",
+    "ordersCount": 1,
+    "totalSpent": 2200
+  },
+  {
+    "id": "c2",
+    "name": "Lokesh Kamath",
+    "phone": "9041935824",
+    "email": "lokesh.kamath@gmail.com",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "ordersCount": 1,
+    "totalSpent": 2000
+  },
+  {
+    "id": "c3",
+    "name": "BUNNY",
+    "phone": "7071799145",
+    "email": "bunny.style@gmail.com",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "ordersCount": 1,
+    "totalSpent": 2400
+  },
+  {
+    "id": "c4",
+    "name": "Aarav Sharma",
+    "phone": "9876543211",
+    "email": "aarav.sharma@gmail.com",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "ordersCount": 2,
+    "totalSpent": 4297
+  },
+  {
+    "id": "c5",
+    "name": "Ananya Iyer",
+    "phone": "8765432109",
+    "email": "ananya.iyer@gmail.com",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "ordersCount": 1,
+    "totalSpent": 3298
+  }
+]
