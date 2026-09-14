@@ -1,58 +1,66 @@
 [
   {
-    "category": "Drone Action Cameras",
     "id": "p-1785686789027-934680",
-    "stock": 500,
     "sku": "drn ",
     "weight": 0.8,
-    "name": "drn"
+    "name": "drn",
+    "stock": 500,
+    "category": "Drone Action Cameras"
   },
   {
     "sku": "wg",
-    "name": "wg",
     "id": "p-1785686817129-150850",
+    "category": "Drone Action Cameras",
     "weight": 2,
     "stock": 500,
-    "category": "Drone Action Cameras"
+    "name": "wg"
   },
   {
-    "sku": "ac",
-    "id": "p-1785686852004-452123",
+    "category": "Drone Action Cameras",
     "stock": 500,
-    "category": "Drone Action Cameras",
     "name": "ac",
-    "weight": 0.8
+    "weight": 0.8,
+    "sku": "ac",
+    "id": "p-1785686852004-452123"
   },
   {
     "category": "Drone Action Cameras",
+    "id": "p-1785686881044-925546",
     "sku": "m22",
     "name": "gs m22",
     "stock": 500,
-    "weight": 0.8,
-    "id": "p-1785686881044-925546"
+    "weight": 0.8
   },
   {
-    "id": "p-1785686907804-1721",
     "stock": 500,
-    "weight": 0.8,
-    "name": "gs",
     "sku": "m15",
+    "name": "gs",
+    "id": "p-1785686907804-1721",
+    "weight": 0.8,
     "category": "Drone Action Cameras"
   },
   {
-    "stock": 500,
-    "id": "p-1785768292674-869029",
     "weight": 1,
+    "id": "p-1785768292674-869029",
     "sku": "drn cmb",
-    "category": "Drone Action Cameras",
-    "name": "drn cmb"
+    "stock": 500,
+    "name": "drn cmb",
+    "category": "Drone Action Cameras"
   },
   {
-    "category": "Other / Custom",
-    "name": "Erlx",
-    "id": "p-1786378571938-665879",
+    "sku": "Erlx",
     "weight": 1,
     "stock": 50,
-    "sku": "Erlx"
+    "id": "p-1786378571938-665879",
+    "name": "Erlx",
+    "category": "Other / Custom"
+  },
+  {
+    "sku": "og",
+    "name": "Erlx og",
+    "id": "p-1789301892281-263535",
+    "stock": 50,
+    "weight": 1,
+    "category": "Other / Custom"
   }
 ]

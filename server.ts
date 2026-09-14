@@ -860,6 +860,96 @@ async function getShiprocketAuthHeaders() {
 
 // -------------------------------------------------------------
 // ENDPOINTS
+
+
+const ADMIN_FILE_PATH = path.join(process.cwd(), 'data_admin.json');
+function loadAdminCreds() {
+  try {
+    if (fs.existsSync(ADMIN_FILE_PATH)) {
+      return JSON.parse(fs.readFileSync(ADMIN_FILE_PATH, 'utf8'));
+    }
+  } catch (err) { }
+  return { email: 'dappersfit@gmail.com', password: 'Jail@1974', name: 'Dappersfit Admin' };
+}
+let adminCreds = loadAdminCreds();
+
+function saveAdminCreds() {
+  try {
+    fs.writeFileSync(ADMIN_FILE_PATH, JSON.stringify(adminCreds, null, 2), 'utf8');
+  } catch (err) { }
+}
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password, role } = req.body;
+  const normalizedEmail = (email || '').trim().toLowerCase();
+
+  if (role === 'admin') {
+    if (normalizedEmail === adminCreds.email.toLowerCase() && password === adminCreds.password) {
+      return res.json({ success: true, user: { name: adminCreds.name, email: adminCreds.email, role: 'admin' } });
+    } else {
+      const matchedEmp = mockEmployees.find((e: any) => {
+        const empEmail = (e.email || '').trim().toLowerCase();
+        const empUsername = (e.username || '').trim().toLowerCase();
+        return (empEmail === normalizedEmail || empUsername === normalizedEmail) && e.password === password;
+      });
+      if (matchedEmp) {
+        if (matchedEmp.status === 'inactive') {
+          return res.status(403).json({ success: false, error: 'Your account has been deactivated.' });
+        }
+        return res.json({ success: true, user: { id: matchedEmp.id, name: matchedEmp.name, email: matchedEmp.email, role: 'employee' } });
+      }
+      return res.status(401).json({ success: false, error: 'Invalid administrator email or password.' });
+    }
+  } else {
+    const matchedEmp = mockEmployees.find((e: any) => {
+      const empEmail = (e.email || '').trim().toLowerCase();
+      const empUsername = (e.username || '').trim().toLowerCase();
+      return (empEmail === normalizedEmail || empUsername === normalizedEmail) && e.password === password;
+    });
+    if (matchedEmp) {
+      if (matchedEmp.status === 'inactive') {
+        return res.status(403).json({ success: false, error: 'Your account has been deactivated.' });
+      }
+      return res.json({ success: true, user: { id: matchedEmp.id, name: matchedEmp.name, email: matchedEmp.email, role: 'employee' } });
+    }
+    return res.status(401).json({ success: false, error: 'Invalid employee credentials.' });
+  }
+});
+
+app.post('/api/auth/change-password', async (req, res) => {
+  const { role, oldPassword, newPassword, userId, email } = req.body;
+  if (role === 'admin') {
+    if (oldPassword !== adminCreds.password) {
+      return res.status(401).json({ success: false, error: 'Incorrect current password.' });
+    }
+    adminCreds.password = newPassword;
+    saveAdminCreds();
+    return res.json({ success: true });
+  } else {
+    let empIdx = -1;
+    if (userId) {
+      empIdx = mockEmployees.findIndex((e: any) => e.id === userId);
+    } else if (email) {
+      empIdx = mockEmployees.findIndex((e: any) => e.email === email);
+    }
+    
+    if (empIdx === -1) return res.status(404).json({ success: false, error: 'Employee not found.' });
+    
+    if (mockEmployees[empIdx].password !== oldPassword) {
+      return res.status(401).json({ success: false, error: 'Incorrect current password.' });
+    }
+    mockEmployees[empIdx].password = newPassword;
+    saveEmployeesToFile();
+    // Also sync to firestore if enabled
+    if (isFirebaseEnabled && firestoreDb) {
+      try {
+        await setDoc(doc(firestoreDb, 'employees', String(mockEmployees[empIdx].id)), mockEmployees[empIdx]);
+      } catch (err) { }
+    }
+    return res.json({ success: true });
+  }
+});
+
 // -------------------------------------------------------------
 
 // API route: check if server is operating in sandbox or live Shiprocket
@@ -1898,12 +1988,7 @@ app.post('/api/replacements', async (req, res) => {
 
     let savedPhotoUrl = payload.photoUrl || '';
     if (payload.photoBase64) {
-      const writtenUrl = saveBase64Image(payload.photoBase64, type);
-      if (writtenUrl) {
-        savedPhotoUrl = writtenUrl;
-      } else {
-        savedPhotoUrl = payload.photoBase64;
-      }
+      savedPhotoUrl = payload.photoBase64;
     }
 
     // Generate readable ticket number
@@ -1975,12 +2060,7 @@ app.put('/api/replacements/:id', async (req, res) => {
 
     let savedPhotoUrl = existing.photoUrl;
     if (payload.photoBase64) {
-      const writtenUrl = saveBase64Image(payload.photoBase64, existing.type || 'rep');
-      if (writtenUrl) {
-        savedPhotoUrl = writtenUrl;
-      } else {
-        savedPhotoUrl = payload.photoBase64;
-      }
+      savedPhotoUrl = payload.photoBase64;
     } else if (payload.photoUrl !== undefined) {
       savedPhotoUrl = payload.photoUrl;
     }
@@ -2125,12 +2205,7 @@ app.post('/api/replacements/:id/photo', async (req, res) => {
 
     let finalUrl = photoUrl;
     if (photoBase64) {
-      const written = saveBase64Image(photoBase64, 'photo');
-      if (written) {
-        finalUrl = written;
-      } else {
-        finalUrl = photoBase64;
-      }
+      finalUrl = photoBase64;
     }
 
     if (!finalUrl) {
@@ -4215,7 +4290,7 @@ app.post('/api/shiprocket/label', async (req, res) => {
     if (!finalUrl.includes('/api/shiprocket/download-live-pdf')) {
       finalUrl = `/api/shiprocket/download-live-pdf?url=${encodeURIComponent(finalUrl)}&filename=Label_${matchingOrder.orderNumber || shipmentId}.pdf`;
     }
-    return res.json({ labelUrl: finalUrl });
+    return res.json({ success: true, labelUrl: finalUrl, labelGenerated: true });
   }
 
   const resolvedShipmentId = matchingOrder?.shipmentId ? String(matchingOrder.shipmentId) : shipmentId;
@@ -4456,16 +4531,14 @@ app.post('/api/shiprocket/invoice', async (req, res) => {
       if (data?.invoice_url) {
         // Proxy through our backend to bypass browser-level cross-origin iframe blocks
         const url = `/api/shiprocket/download-live-pdf?url=${encodeURIComponent(data.invoice_url)}&filename=Invoice_${targetIds[0]}.pdf`;
-        return res.json({ invoiceUrl: url });
+        return res.json({ success: true, invoiceUrl: url });
       }
     } catch (err: any) {
       // Gracefully fall back to our invoice PDF generator
     }
   }
 
-  res.json({
-    invoiceUrl: `/api/shiprocket/download-invoice-pdf?orderId=${encodeURIComponent(String(orderId || (matchingOrder ? matchingOrder.id : '')))}`
-  });
+  res.json({ success: true, invoiceUrl: `/api/shiprocket/download-invoice-pdf?orderId=${encodeURIComponent(String(orderId || (matchingOrder ? matchingOrder.id : '')))}` });
 });
 
 // GET Endpoint to serve physical Tax Invoice PDF file with same-origin policy

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
+import ProfileModal from './components/ProfileModal';
 import Dashboard from './components/Dashboard';
 import OrdersTable from './components/OrdersTable';
 import OrderParser from './components/OrderParser';
@@ -81,6 +82,7 @@ export default function App() {
 
   // Responsive Mobile Navigation State
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
 
   // Dashboard box navigation click callback
   const handleNavigateToOrders = (filterStatus?: string) => {
@@ -857,6 +859,7 @@ export default function App() {
           isSimulated={isSimulated} 
           user={user}
           onSignOut={handleSignOut}
+          onOpenProfile={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -891,6 +894,10 @@ export default function App() {
               user={user}
               onSignOut={() => {
                 handleSignOut();
+                setIsMobileSidebarOpen(false);
+              }}
+              onOpenProfile={() => {
+                setIsProfileModalOpen(true);
                 setIsMobileSidebarOpen(false);
               }}
             />

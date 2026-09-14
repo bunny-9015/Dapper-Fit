@@ -12,7 +12,7 @@ interface LoginProps {
 }
 
 export default function Login({ onLoginSuccess }: LoginProps) {
-  const [role, setRole] = useState<'admin' | 'employee'>('admin');
+    const [role, setRole] = useState<'admin' | 'employee'>('admin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -20,106 +20,32 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    if (!email || !password) {
+      setError('Please enter both email and password.');
+      return;
+    }
     setLoading(true);
+    setError(null);
 
-    let dbEmployees = [];
     try {
-      const res = await fetch('/api/employees');
-      const data = await res.json();
-      if (data.employees) {
-        dbEmployees = data.employees;
-        localStorage.setItem('dappersfit_employees', JSON.stringify(data.employees));
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role })
+      });
+      const data = await response.json();
+      
+      if (data.success && data.user) {
+        onLoginSuccess(data.user);
       } else {
-        const savedEmps = localStorage.getItem('dappersfit_employees');
-        dbEmployees = savedEmps ? JSON.parse(savedEmps) : [];
+        setError(data.error || 'Invalid credentials. Please verify your details.');
       }
     } catch (err) {
-      console.error('Failed to load employees for auth:', err);
-      const savedEmps = localStorage.getItem('dappersfit_employees');
-      dbEmployees = savedEmps ? JSON.parse(savedEmps) : [];
-    }
-
-    // Simulate Network/JWT latency
-    setTimeout(() => {
+      console.error('Login error:', err);
+      setError('Network error during login. Please ensure the server is running.');
+    } finally {
       setLoading(false);
-      const normalizedEmail = email.trim().toLowerCase();
-
-      if (role === 'admin') {
-        if (normalizedEmail === 'admin@dappersfit.com' && password === 'admin123') {
-          onLoginSuccess({
-            name: 'Admin User',
-            email: 'admin@dappersfit.com',
-            role: 'admin',
-          });
-        } else if (normalizedEmail === 'tapfit' || normalizedEmail === 'tapfit@dappersfit.com' || normalizedEmail === 'tap fit') {
-          onLoginSuccess({
-            name: 'Tap Fit API User',
-            email: 'tapfit@dappersfit.com',
-            role: 'admin',
-          });
-        } else {
-          // Fallback check if it's actually an employee login
-          const matchedEmp = dbEmployees.find((e: any) => {
-            const empEmail = (e.email || '').trim().toLowerCase();
-            const empUsername = (e.username || '').trim().toLowerCase();
-            return (empEmail === normalizedEmail || empUsername === normalizedEmail) && e.password === password;
-          });
-
-          if (matchedEmp) {
-            onLoginSuccess({
-              name: matchedEmp.name,
-              email: matchedEmp.email,
-              role: 'employee',
-            });
-          } else {
-            setError('Invalid administrator email or password. Please verify your credentials.');
-          }
-        }
-      } else {
-        // Employee credentials check
-        // First check dynamically created employees from database
-        const matchedEmp = dbEmployees.find((e: any) => {
-          const empEmail = (e.email || '').trim().toLowerCase();
-          const empUsername = (e.username || '').trim().toLowerCase();
-          return (empEmail === normalizedEmail || empUsername === normalizedEmail) && e.password === password;
-        });
-
-        if (matchedEmp) {
-          onLoginSuccess({
-            name: matchedEmp.name,
-            email: matchedEmp.email,
-            role: 'employee',
-          });
-        } else if (normalizedEmail === 'tapfit' || normalizedEmail === 'tapfit@dappersfit.com' || normalizedEmail === 'tap fit') {
-          onLoginSuccess({
-            name: 'Tap Fit API User',
-            email: 'tapfit@dappersfit.com',
-            role: 'employee',
-          });
-        } else {
-          // Check if employee was deleted
-          const wasDeleted = !dbEmployees.some((e: any) => 
-            (e.email || '').trim().toLowerCase() === normalizedEmail || 
-            (e.username || '').trim().toLowerCase() === normalizedEmail
-          );
-
-          if (normalizedEmail.endsWith('@dapperfit.com') && password) {
-            const formattedName = normalizedEmail
-              .split('@')[0]
-              .replace('.', ' ')
-              .replace(/(^\w|\s\w)/g, m => m.toUpperCase());
-            onLoginSuccess({
-              name: formattedName,
-              email: normalizedEmail,
-              role: 'employee',
-            });
-          } else {
-            setError('Invalid employee credentials. Please verify your credentials.');
-          }
-        }
-      }
-    }, 800);
+    }
   };
 
   return (
@@ -195,7 +121,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@dappersfit.com"
+                placeholder="dappersfit@gmail.com"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition"
               />
             </div>

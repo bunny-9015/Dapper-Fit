@@ -16,9 +16,10 @@ interface SidebarProps {
   isSimulated: boolean;
   user: { name: string; email: string; role: 'admin' | 'employee' } | null;
   onSignOut: () => void;
+  onOpenProfile?: () => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, isSimulated, user, onSignOut }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, isSimulated, user, onSignOut, onOpenProfile }: SidebarProps) {
   const isAdmin = user?.role === 'admin';
 
   // Base navigation items for all roles (WITHOUT AI WhatsApp Parser tab)
@@ -118,14 +119,14 @@ export default function Sidebar({ activeTab, setActiveTab, isSimulated, user, on
             {userInitials}
           </div>
           <div className="min-w-0 flex-1">
-            <span className="text-xs font-bold text-white block truncate">{user?.name || 'Active User'}</span>
-            <span className="text-[10px] text-slate-500 block truncate">{user?.email || 'user@dappersfit.com'}</span>
+            <span className="text-xs font-bold text-white block truncate">{user?.name || 'Dappersfit Admin'}</span>
+            <span className="text-[10px] text-slate-500 block truncate">{user?.email || 'dappersfit@gmail.com'}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#2a2826]/60">
           <button 
-            onClick={() => setActiveTab(isAdmin ? 'settings' : 'dashboard')}
+            onClick={onOpenProfile ? onOpenProfile : () => setActiveTab(isAdmin ? 'settings' : 'dashboard')}
             className="flex items-center justify-center space-x-1.5 py-1.5 px-2 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-350 rounded-lg border border-white/5 transition"
             title="Session Details"
           >
